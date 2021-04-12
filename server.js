@@ -13,7 +13,6 @@ const connection = mysql.createConnection({
 // results will contain the results of the query
 // fields will contain information about the returned results fields (if any)
 const viewEmployees = () => {
-    console.log('Selecting all employees...\n');
     const queryString = `SELECT
 	e.id,
     CONCAT(e.first_name, " " ,e.last_name) AS Employee,
@@ -75,9 +74,64 @@ const viewEmployeesByDept = () => {
     })
 };
 
+
+
+// const viewEmployeesByManager = () => {
+//     connection.query(`SELECT
+//     m.id AS Manager_ID,
+//     CONCAT(m.first_name, ' ' ,m.last_name) AS Manager,
+//     CONCAT(e.first_name, ' ' ,e.last_name) AS Employee
+// FROM employee e
+// INNER JOIN employee m ON m.id = e.manager_id
+// WHERE m.id = 540
+// ORDER BY MANAGER;`, (error, result) => {
+//         if (error) throw error;
+
+//         inquirer.prompt([
+//             {
+//                 message: "Which Manager Would You Like to See Direct Reports For?",
+//                 name: "whichManager",
+//                 type: "list",
+//                 choices: result.map((manager) => {
+//                     return {
+//                         name: `${manager.id}: ${manager.first_name} ${manager.last_name}`,
+//                         value: manager
+//                     }
+//                 })
+//             }
+//         ]).then(({ whichManager }) => {
+//             console.log("Which Manager" + whichManager);
+
+//             connection.query(`SELECT
+//             e.id,
+//             CONCAT(e.first_name, ' ' ,e.last_name) AS Employee,
+//             role.title AS Title,
+//             department.name AS Department,
+//             CONCAT("$",role.salary) AS Salary,
+//             IFNULL(CONCAT(m.first_name, ' ' ,m.last_name), 'NO MANAGER') AS Manager
+//         FROM employee e
+//         LEFT JOIN employee m ON e.manager_id = m.id
+//         INNER JOIN role ON e.role_id = role.id
+//         INNER JOIN department ON role.department_id = department.id
+//         WHERE role.department_id = ?
+//         ORDER BY e.id;`, whichDept.id, (error, results) => {
+//             if (error) throw error;
+
+//             console.table(results);
+//             initInquirer();
+//         })
+//         })
+//     })
+// };
+
 const viewDepartments = () => {
-    console.log('Selecting all departments...\n');
-    connection.query('SELECT * FROM department', (err, results) => {
+    connection.query(`SELECT
+    department.id AS ID,
+    department.name AS Department,
+    SUM(role.salary) AS Utilized_Budget
+FROM department
+INNER JOIN role ON role.department_id = department.id
+GROUP BY department.id;`, (err, results) => {
         if (err) throw err;
         // Log all results of the SELECT statement
         console.table(results);
@@ -86,8 +140,14 @@ const viewDepartments = () => {
 };
 
 const viewRoles = () => {
-    console.log('Selecting all roles...\n');
-    connection.query('SELECT * FROM role', (err, results) => {
+    connection.query(`SELECT
+    role.id AS ID,
+    role.title AS Title,
+    department.name AS Department,
+    CONCAT("$",role.salary) AS Salary
+FROM role
+INNER JOIN department ON role.department_id = department.id
+ORDER BY department.name;`, (err, results) => {
         if (err) throw err;
         // Log all results of the SELECT statement
         console.table(results);
@@ -95,37 +155,6 @@ const viewRoles = () => {
     });
 };
 
-
-
-//   const showSongsByForeigner = () => {
-//     console.log('Selecting all songs...\n');
-//     connection.query('SELECT * FROM top1000 WHERE artist = "George Michael"', (err, results) => {
-//       if (err) throw err;
-//       // Log all results of the SELECT statement
-//       console.table(results);
-      
-//     });
-//   };  
-
-//   const showTop50 = () => {
-//     console.log('Selecting Top 50 songs...\n');
-//     connection.query('SELECT * FROM top1000 WHERE position BETWEEN 1 and 50', (err, results) => {
-//       if (err) throw err;
-//       // Log all results of the SELECT statement
-//       console.table(results);
-      
-//     });
-//   };  
-
-//   const showTopArtists = () => {
-//     console.log('Selecting Top Artists...\n');
-//     connection.query('SELECT artist, COUNT(*) FROM top1000 GROUP BY artist HAVING COUNT(*) > 1;', (err, results) => {
-//       if (err) throw err;
-//       // Log all results of the SELECT statement
-//       console.table(results);
-      
-//     });
-//   };  
 const initInquirer = () => {
 
     inquirer.prompt([
@@ -157,7 +186,8 @@ const initInquirer = () => {
                 return viewEmployees(); 
             case "View All Employees By Department":
                 return viewEmployeesByDept(); 
-            // "View All Employees By Manager", 
+            case "View All Employees By Manager":
+                return viewEmployeesByManager(); 
             // "Add New Employee", 
             // "Remove Employee", 
             // "Update Employee Role", 
