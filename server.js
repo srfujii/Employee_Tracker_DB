@@ -13,6 +13,17 @@ const connection = mysql.createConnection({
 // error will be an Error if one occurred during the query
 // results will contain the results of the query
 // fields will contain information about the returned results fields (if any)
+const queryDB = (queryString, rePrompt) => {
+
+connection.query(queryString, (err, results) => {
+    if (err) throw err;
+    // Log all results of the SELECT statement
+    console.table(results);
+
+    if (rePrompt) initInquirer();
+});
+}
+
 const viewEmployees = () => {
     const queryString = `SELECT
 	e.id,
@@ -27,15 +38,13 @@ INNER JOIN role ON e.role_id = role.id
 INNER JOIN department ON role.department_id = department.id
 ORDER BY e.id;`
  
-    connection.query(queryString, (err, results) => {
-        if (err) throw err;
-        // Log all results of the SELECT statement
-        console.table(results);
-        initInquirer();
-    });
+    queryDB(queryString, true);
+    
 };
 
 const viewEmployeesByDept = () => {
+    
+    
     connection.query("SELECT * FROM department", (error, result) => {
         if (error) throw error;
 
@@ -170,7 +179,6 @@ const addNewEmployee = () => {
                             })
                         }
                 ]).then(({ whichManager }) => {
-
                     connection.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id)
                         VALUES ("${empFirstName}", "${empLastName}", ${roleName.ID}, ${whichManager.id});`, (error, result) => {
                             if (error) throw error;
@@ -178,7 +186,7 @@ const addNewEmployee = () => {
                         console.log("Successfully added new employee!");
                         initInquirer();
                     })
-                })
+                });
             });
     });
 })};
