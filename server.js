@@ -274,46 +274,69 @@ const addNewRole = () => {
     });
 })}
 
-// const updateEmployeeRole = () => {
-// // Which employee's role would you like to update?
-// // Select from employee....see view all employees above
-// const queryString = `SELECT
-//             e.id,
-//             CONCAT(e.first_name, " " ,e.last_name) AS Employee,
-//             role.id AS ROLE_ID,
-//             role.title AS Role_Title,
-//             department.name AS Department_Name
-//         FROM employee e
-//         LEFT JOIN employee m ON e.manager_id = m.id
-//         INNER JOIN role ON e.role_id = role.id
-//         INNER JOIN department ON role.department_id = department.id
-//         ORDER BY e.id;`
- 
-//     connection.query(queryString, (err, results) => {
-//         if (err) throw err;
-  
-//         console.table(results);
+const updateEmployeeRole = () => {
+// Which employee's role would you like to update?
+// Select from employee....see view all employees above
+const queryString = `SELECT
+        e.id,
+        CONCAT(e.first_name, " " ,e.last_name) AS Employee,
+        role.id AS ROLE_ID,
+        role.title AS Role_Title,
+        department.name AS Department_Name
+    FROM employee e
+    LEFT JOIN employee m ON e.manager_id = m.id
+    INNER JOIN role ON e.role_id = role.id
+    INNER JOIN department ON role.department_id = department.id
+    ORDER BY e.id;`
 
-//         // inquirer.prompt([
-//         //     {
-//         //         message: "Which Employee's Role Would You Like to Update?",
-//         //         name: "whichEmpRole",
-//         //         type: "list",
-//         //         choices: results.map((employee) => {
-//         //             return {
-//         //                 name: `${employee.id}: ${employee.first_name} ${employee.last_name} ${employee.role.id} ${employee.role.title}`,
-//         //                 value: employee
-//         //             }
-//         //         })
-//         //     }
-//         // ]).then(({ whichEmpRole }) => {
-//         //     console.log(whichEmpRole);
-//         // // What would you like their new role to be? (Choose from existing roles)
-//         // // Log all results of the SELECT statement
+connection.query(queryString, (err, results) => {
+    if (err) throw err;
+
+    console.table(results);
+
+    inquirer.prompt([
+        {
+            message: "Which Employee's Role Would You Like to Update?",
+            name: "whichEmployee",
+            type: "list",
+            choices: results.map((employee) => {
+                return {
+                    name: `${employee.id}: ${employee.Employee} ${employee.ROLE_ID} ${employee.Role_Title}`,
+                    value: employee
+                }
+            })
+        }
+    ]).then(({ whichEmployee }) => {
         
-//         // initInquirer();
-//         // });
-//     })}
+        connection.query(`SELECT * FROM role;`, (error, result) => {
+            if (error) throw error;
+
+            inquirer.prompt([
+                {
+                message: "What is the employee's new role?",
+                type: "list",
+                name: "whichNewRole",
+                choices: result.map((role) => {
+                    console.log("Role: ", role.id, role.title, role.salary);
+                    return {
+                        name: `${role.id}: ${role.title} ${role.salary}`,
+                        value: role
+                        }
+                    })
+                }
+        ]).then(({ whichNewRole }) => {
+            console.log("Which Employee: ", whichEmployee.id);
+            console.log("Which Role ID: " , whichNewRole.id);
+            connection.query(`UPDATE employee SET role_id=${whichNewRole.id} WHERE employee.id = ${whichEmployee.id};`, (error, result) => {
+                    if (error) throw error;
+                    
+                console.log("Successfully updated employee's role!");
+                initInquirer();
+            })
+        });
+    });
+});
+})};
 
 const viewRoles = () => {
     connection.query(`SELECT
@@ -343,7 +366,7 @@ const initInquirer = () => {
                 "View All Employees By Manager", 
                 "Add New Employee", 
                 // "Remove Employee", 
-                // "Update Employee Role", 
+                "Update Employee Role", 
                 // "Update Employee Manager", 
                 "View All Roles", 
                 "Add New Role", 
@@ -367,8 +390,8 @@ const initInquirer = () => {
             case "Add New Employee":
                 return addNewEmployee(); 
             // "Remove Employee", 
-            // case "Update Employee Role":
-            //     return updateEmployeeRole(); 
+            case "Update Employee Role":
+                return updateEmployeeRole(); 
             // "Update Employee Manager", 
             case "View All Roles":
                 return viewRoles();
