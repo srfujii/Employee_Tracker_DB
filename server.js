@@ -210,7 +210,33 @@ const addNewEmployee = () => {
                 })
             });
     });
-})}
+})};
+
+const addNewDepartment = () => {
+    console.log("Here are the existing departments: ");
+
+    connection.query(`SELECT department.id AS ID, department.name AS Department
+                    FROM department;`, (err, results) => {
+                if (err) throw err;
+                // Log all results of the SELECT statement
+                console.table(results);
+            
+            inquirer.prompt([
+                {
+                    message: "What New Department Would You Like to Add?",
+                    name: "newDept"
+                }
+            ]).then((answers) => {
+                connection.query(`INSERT INTO department (name)
+            VALUES ("${answers.newDept}");`, (error, result) => {
+                if (error) throw error;
+                
+            console.log("Successfully added new department!");
+            initInquirer();
+            })
+    });
+})
+};
 
 const viewDepartments = () => {
     connection.query(`SELECT
@@ -218,7 +244,7 @@ const viewDepartments = () => {
     department.name AS Department,
     SUM(role.salary) AS Utilized_Budget
 FROM department
-INNER JOIN role ON role.department_id = department.id
+LEFT JOIN role ON role.department_id = department.id
 GROUP BY department.id;`, (err, results) => {
         if (err) throw err;
         // Log all results of the SELECT statement
@@ -226,6 +252,49 @@ GROUP BY department.id;`, (err, results) => {
         initInquirer();
     });
 };
+
+const addNewRole = () => {
+    connection.query("SELECT * FROM department", (error, result) => {
+        if (error) throw error;
+
+        inquirer.prompt([
+            {
+                message: "Which Department Would You Like to Add a Role to?",
+                name: "whichDept",
+                type: "list",
+                choices: result.map((dept) => {
+                    return {
+                        name: `${dept.id}: ${dept.name}`,
+                        value: dept
+                    }
+                })
+            },
+            {
+                message: "What is the name of the role you'd like to add?",
+                name: "newRoleName",
+            },
+            {
+                message: "What salary should this new role have?",
+                name: "salary",
+            }
+        ]).then((answers) => {
+            console.log(answers);
+            console.log("Department Id: ", answers.whichDept.id);
+            console.log("Department Name: ", answers.whichDept.name);
+            console.log("New Role Name: ", answers.newRoleName);
+            console.log("Salary: ", answers.salary);
+
+            connection.query(`INSERT INTO role (title, salary, department_id)
+            VALUES ("${answers.newRoleName}", ${answers.salary}, ${answers.whichDept.id});`, (error, result) => {
+                if (error) throw error;
+                
+            console.log("Successfully added new role!");
+            initInquirer();
+        })
+
+    });
+})}
+
 
 const viewRoles = () => {
     connection.query(`SELECT
@@ -235,7 +304,7 @@ const viewRoles = () => {
     CONCAT("$",role.salary) AS Salary
 FROM role
 INNER JOIN department ON role.department_id = department.id
-ORDER BY department.name;`, (err, results) => {
+ORDER BY department.id, ID;`, (err, results) => {
         if (err) throw err;
         // Log all results of the SELECT statement
         console.table(results);
@@ -261,7 +330,7 @@ const initInquirer = () => {
                 "Add New Role", 
                 "Remove Role", 
                 "View All Departments",
-                "Add Department",
+                "Add New Department",
                 "Remove Department",
                 "Quit"
             ],
@@ -283,12 +352,12 @@ const initInquirer = () => {
             // "Update Employee Manager", 
             case "View All Roles":
                 return viewRoles();
-            // "Add New Role", 
-            // "Remove Role", 
+            case "Add New Role": 
+                return addNewRole();
             case "View All Departments":
                 return viewDepartments();
-            // "Add Department",
-            // "Remove Department",
+            case "Add New Department":
+                return addNewDepartment();
             case "Quit":
                 return connection.end();
         }
