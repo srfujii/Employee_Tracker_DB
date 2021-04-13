@@ -29,6 +29,7 @@ LEFT JOIN employee m ON e.manager_id = m.id
 INNER JOIN role ON e.role_id = role.id
 INNER JOIN department ON role.department_id = department.id
 ORDER BY e.id;`
+ 
     connection.query(queryString, (err, results) => {
         if (err) throw err;
         // Log all results of the SELECT statement
@@ -78,8 +79,6 @@ const viewEmployeesByDept = () => {
     })
 };
 
-
-
 const viewEmployeesByManager = () => {
     connection.query(`SELECT id, first_name, last_name 
     FROM employee 
@@ -92,7 +91,6 @@ const viewEmployeesByManager = () => {
                 name: "whichManager",
                 type: "list",
                 choices: result.map((manager) => {
-                    console.log("Manager: ", manager);
                     return {
                         name: `${manager.id}: ${manager.first_name} ${manager.last_name}`,
                         value: manager
@@ -100,7 +98,6 @@ const viewEmployeesByManager = () => {
                 })
             }
         ]).then(({ whichManager }) => {
-            console.log("Which Manager.id" + whichManager.id);
 
             connection.query(`SELECT 
                 e.id,
@@ -295,6 +292,46 @@ const addNewRole = () => {
     });
 })}
 
+// const updateEmployeeRole = () => {
+// // Which employee's role would you like to update?
+// // Select from employee....see view all employees above
+// const queryString = `SELECT
+//             e.id,
+//             CONCAT(e.first_name, " " ,e.last_name) AS Employee,
+//             role.id AS ROLE_ID,
+//             role.title AS Role_Title,
+//             department.name AS Department_Name
+//         FROM employee e
+//         LEFT JOIN employee m ON e.manager_id = m.id
+//         INNER JOIN role ON e.role_id = role.id
+//         INNER JOIN department ON role.department_id = department.id
+//         ORDER BY e.id;`
+ 
+//     connection.query(queryString, (err, results) => {
+//         if (err) throw err;
+  
+//         console.table(results);
+
+//         // inquirer.prompt([
+//         //     {
+//         //         message: "Which Employee's Role Would You Like to Update?",
+//         //         name: "whichEmpRole",
+//         //         type: "list",
+//         //         choices: results.map((employee) => {
+//         //             return {
+//         //                 name: `${employee.id}: ${employee.first_name} ${employee.last_name} ${employee.role.id} ${employee.role.title}`,
+//         //                 value: employee
+//         //             }
+//         //         })
+//         //     }
+//         // ]).then(({ whichEmpRole }) => {
+//         //     console.log(whichEmpRole);
+//         // // What would you like their new role to be? (Choose from existing roles)
+//         // // Log all results of the SELECT statement
+        
+//         // initInquirer();
+//         // });
+//     })}
 
 const viewRoles = () => {
     connection.query(`SELECT
@@ -323,15 +360,15 @@ const initInquirer = () => {
                 "View All Employees By Department", 
                 "View All Employees By Manager", 
                 "Add New Employee", 
-                "Remove Employee", 
-                "Update Employee Role", 
-                "Update Employee Manager", 
+                // "Remove Employee", 
+                // "Update Employee Role", 
+                // "Update Employee Manager", 
                 "View All Roles", 
                 "Add New Role", 
-                "Remove Role", 
+                // "Remove Role", 
                 "View All Departments",
                 "Add New Department",
-                "Remove Department",
+                // "Remove Department",
                 "Quit"
             ],
             name: "mainMenu"
@@ -348,7 +385,8 @@ const initInquirer = () => {
             case "Add New Employee":
                 return addNewEmployee(); 
             // "Remove Employee", 
-            // "Update Employee Role", 
+            // case "Update Employee Role":
+            //     return updateEmployeeRole(); 
             // "Update Employee Manager", 
             case "View All Roles":
                 return viewRoles();
